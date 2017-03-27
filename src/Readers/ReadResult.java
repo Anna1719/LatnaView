@@ -1,6 +1,7 @@
 package Readers;
 
 import Models.StorekeeperModel;
+import Models.Storekeepers;
 import Models.Task;
 
 import java.io.BufferedReader;
@@ -16,7 +17,7 @@ public class ReadResult {
     private Integer numberOfWarehousemen;
     private ArrayList<String[]> InfoAboutWarehousemen;
     private ArrayList<String[]> replenishment;
-    private ArrayList<StorekeeperModel> listStorekeeper;
+    private Storekeepers listStorekeeper;
 
     String line = "";
     BufferedReader br = null;
@@ -41,11 +42,11 @@ public class ReadResult {
     }
 
     public void setListStorekeeper(){
-        listStorekeeper = new ArrayList<>();
+        listStorekeeper = new Storekeepers();
 
         //Order to index of storekeepers starts with 1, therefore added  empty st(as index 0)
         StorekeeperModel st = new StorekeeperModel();
-        listStorekeeper.add(st);
+        listStorekeeper.addStorekeeper(st);
 
         for (int i=1; i<=numberOfWarehousemen; i++){
             StorekeeperModel storekeeper = new StorekeeperModel();
@@ -55,7 +56,7 @@ public class ReadResult {
             storekeeper.setTimeOnMove(Integer.valueOf(InfoAboutWarehousemen.get(i)[3]));
             storekeeper.setTimeOnSort(Integer.valueOf(InfoAboutWarehousemen.get(i)[4]));
             storekeeper.setSummTime(Integer.valueOf(InfoAboutWarehousemen.get(i)[5]));
-            listStorekeeper.add(storekeeper);
+            listStorekeeper.addStorekeeper(storekeeper);
         }
     }
 
@@ -71,7 +72,7 @@ public class ReadResult {
             tasksOfStorekeeper.add(taskArrayList.get(idTask[i]-1));
         }
 
-        listStorekeeper.get(Integer.parseInt(idStorekeeper[0])).setTasks(tasksOfStorekeeper);
+        listStorekeeper.getStorekeeper(Integer.parseInt(idStorekeeper[0])).setTasks(tasksOfStorekeeper);
 
     }
 
