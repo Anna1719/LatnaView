@@ -32,6 +32,10 @@ public class Storekeepers {
         return array;
     }
 
+    public String[] getHeaders(){
+        return new String[]{"Id","NumberOfTasks","SummaryPath","TimeMoving","TimeSorting","OverallTime","Tasks"};
+    }
+
     public List<String[]> toStringList(){
         List<String[]> list =new ArrayList<>(storekeepers.size());
         for (StorekeeperModel item: storekeepers ) {
