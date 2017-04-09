@@ -2,6 +2,7 @@ package controllers;
 
 import Exceptions.EditException;
 import Models.*;
+import Readers.ReadResult;
 import com.opencsv.CSVWriter;
 import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
@@ -9,17 +10,23 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Nikolay Kanatov on 01.03.2017.
@@ -35,6 +42,7 @@ public class EditDocController{
     public Orders ordersVector;
     public Goods goodsVector;
     public Parameters parametersVector;
+    public Storekeepers storekeepersVector;
     public CSVWriter writer = null;
 
     public final ObservableList resultList = FXCollections.observableArrayList();
@@ -45,6 +53,8 @@ public class EditDocController{
         Scene scene = new Scene(new Group());
         try {
             Stage stage = new Stage();
+            ReadResult result=new ReadResult();
+            boolean combo=false;
             int countField=0;
             switch (fileName){
                 case "Items.csv":
@@ -67,182 +77,190 @@ public class EditDocController{
                     resultList.addAll( parametersVector.toParametersArray());
                     countField = parametersVector.getParameter(0).getCountField();
                     break;
+                case "Result.csv":
+                    result.readResult(filePath);
+                    result.readLog(filePath.replace("Result.csv","test_log.1"));
+                    storekeepersVector=result.listStorekeeper;
+                    combo=true;
+                    drawStKeeper(scene,stage,storekeepersVector);
+                    break;
             }
-            FillTable(resultList,countField);
+            if(!combo) {
+                FillTable(resultList, countField);
 
-            fileTableView.setPrefWidth(600);
+                fileTableView.setPrefWidth(600);
 
-            final HBox hbRow = new HBox();
-            TextField[] tx = new TextField[countField];
+                final HBox hbRow = new HBox();
+                TextField[] tx = new TextField[countField];
 
-            for(int i=0;i<countField;i++){
-                tx[i]=new TextField();
-                tx[i].setMaxHeight(20);
-                tx[i].setMaxWidth(((TableColumn)(fileTableView.getColumns().get(i))).getPrefWidth());
-                tx[i].setId(((TableColumn)(fileTableView.getColumns().get(i))).getText());
-                hbRow.getChildren().add(tx[i]);
-            }
-            hbRow.setSpacing(5);
-
-            final HBox hbBut = new HBox();
-            Button addButton = new Button("Add row");
-            Button deleteButton = new Button("Delete");
-            Button saveButton = new Button("Save");
-
-            saveButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    try {
-                        writer = new CSVWriter(new FileWriter(filePath),';');
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    switch (resultList.get(0).getClass().getName()){
-                        case "Models.ItemModel":
-                            writer.writeNext(itemsVector.getHeaders(),false);
-                            writer.writeAll(itemsVector.toStringList(),false);
-                            break;
-                        case "Models.GoodModel":
-                            writer.writeNext(goodsVector.getHeaders(),false);
-                            writer.writeAll(goodsVector.toStringList(),false);
-                            break;
-                        case "Models.OrderModel":
-                            writer.writeNext(ordersVector.getHeaders(),false);
-                            writer.writeAll(ordersVector.toStringList(),false);
-                            break;
-                        case "Models.ParameterModel":
-                            writer.writeNext(parametersVector.getHeaders(),false);
-                            writer.writeAll(parametersVector.toStringList(),false);
-                            break;
-                    }
-                    try {
-                        writer.close();
-                        AlertDone();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                for (int i = 0; i < countField; i++) {
+                    tx[i] = new TextField();
+                    tx[i].setMaxHeight(20);
+                    tx[i].setMaxWidth(((TableColumn) (fileTableView.getColumns().get(i))).getPrefWidth());
+                    tx[i].setId(((TableColumn) (fileTableView.getColumns().get(i))).getText());
+                    hbRow.getChildren().add(tx[i]);
                 }
-            });
-            addButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    String tmp="";
-                    try {
-                        writer = new CSVWriter(new FileWriter(filePath),';');
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                hbRow.setSpacing(5);
 
-                    for (int i=0;i<tx.length;i++)
-                        if(tx[i].getText().isEmpty()){
-                            tmp="";
-                            return;
-                        }else{
-                            tmp=tmp.concat(tx[i].getText()+";");
-                            tx[i].setText("");
+                final HBox hbBut = new HBox();
+                Button addButton = new Button("Add row");
+                Button deleteButton = new Button("Delete");
+                Button saveButton = new Button("Save");
+
+                saveButton.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        try {
+                            writer = new CSVWriter(new FileWriter(filePath), ';');
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-
-                    if(Validate(resultList.get(0).getClass().getName(),tmp)){
-                        switch (resultList.get(0).getClass().getName()){
+                        switch (resultList.get(0).getClass().getName()) {
                             case "Models.ItemModel":
-                                resultList.add(new ItemModel(tmp));
-                                itemsVector.addItem(new ItemModel(tmp));
-                                writer.writeNext(itemsVector.getHeaders(),false);
-                                writer.writeAll(itemsVector.toStringList(),false);
+                                writer.writeNext(itemsVector.getHeaders(), false);
+                                writer.writeAll(itemsVector.toStringList(), false);
                                 break;
                             case "Models.GoodModel":
-                                resultList.add(new GoodModel(tmp));
-                                goodsVector.addGood(new GoodModel(tmp));
-                                writer.writeNext(goodsVector.getHeaders(),false);
-                                writer.writeAll(goodsVector.toStringList(),false);
+                                writer.writeNext(goodsVector.getHeaders(), false);
+                                writer.writeAll(goodsVector.toStringList(), false);
                                 break;
                             case "Models.OrderModel":
-                                resultList.add(new OrderModel(tmp));
-                                ordersVector.addOrder(new OrderModel(tmp));
-                                writer.writeNext(ordersVector.getHeaders(),false);
-                                writer.writeAll(ordersVector.toStringList(),false);
+                                writer.writeNext(ordersVector.getHeaders(), false);
+                                writer.writeAll(ordersVector.toStringList(), false);
                                 break;
                             case "Models.ParameterModel":
-                                resultList.add(new ParameterModel(tmp));
-                                parametersVector.addParameter(new ParameterModel(tmp));
-                                writer.writeNext(parametersVector.getHeaders(),false);
-                                writer.writeAll(parametersVector.toStringList(),false);
+                                writer.writeNext(parametersVector.getHeaders(), false);
+                                writer.writeAll(parametersVector.toStringList(), false);
                                 break;
                         }
                         try {
                             writer.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }else{
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setHeaderText(null);
-                        alert.setContentText("Wrong input!");
-
-                        alert.showAndWait();
-                    }
-                }
-            });
-            deleteButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    if(fileTableView.getSelectionModel().getSelectedIndex()>=0){
-                        resultList.remove(fileTableView.getSelectionModel().getSelectedIndex());
-                        try {
-                            writer = new CSVWriter(new FileWriter(filePath),';');
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        switch (fileTableView.getSelectionModel().getSelectedItem().getClass().getName()){
-                            case "Models.ItemModel":
-                                itemsVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
-                                writer.writeNext(itemsVector.getHeaders(),false);
-                                writer.writeAll(itemsVector.toStringList(),false);
-                                break;
-                            case "Models.GoodModel":
-                                goodsVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
-                                writer.writeNext(goodsVector.getHeaders(),false);
-                                writer.writeAll(goodsVector.toStringList(),false);
-                                break;
-                            case "Models.OrderModel":
-                                ordersVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
-                                writer.writeNext(ordersVector.getHeaders(),false);
-                                writer.writeAll(ordersVector.toStringList(),false);
-                                break;
-                            case "Models.ParameterModel":
-                                parametersVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
-                                writer.writeNext(parametersVector.getHeaders(),false);
-                                writer.writeAll(parametersVector.toStringList(),false);
-                                break;
-                        }
-                        try {
-                            writer.close();
+                            AlertDone();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-                }
-            });
+                });
+                addButton.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        String tmp = "";
+                        try {
+                            writer = new CSVWriter(new FileWriter(filePath), ';');
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        for (int i = 0; i < tx.length; i++)
+                            if (tx[i].getText().isEmpty()) {
+                                tmp = "";
+                                return;
+                            } else {
+                                tmp = tmp.concat(tx[i].getText() + ";");
+                                tx[i].setText("");
+                            }
+
+                        if (Validate(resultList.get(0).getClass().getName(), tmp)) {
+                            switch (resultList.get(0).getClass().getName()) {
+                                case "Models.ItemModel":
+                                    resultList.add(new ItemModel(tmp));
+                                    itemsVector.addItem(new ItemModel(tmp));
+                                    writer.writeNext(itemsVector.getHeaders(), false);
+                                    writer.writeAll(itemsVector.toStringList(), false);
+                                    break;
+                                case "Models.GoodModel":
+                                    resultList.add(new GoodModel(tmp));
+                                    goodsVector.addGood(new GoodModel(tmp));
+                                    writer.writeNext(goodsVector.getHeaders(), false);
+                                    writer.writeAll(goodsVector.toStringList(), false);
+                                    break;
+                                case "Models.OrderModel":
+                                    resultList.add(new OrderModel(tmp));
+                                    ordersVector.addOrder(new OrderModel(tmp));
+                                    writer.writeNext(ordersVector.getHeaders(), false);
+                                    writer.writeAll(ordersVector.toStringList(), false);
+                                    break;
+                                case "Models.ParameterModel":
+                                    resultList.add(new ParameterModel(tmp));
+                                    parametersVector.addParameter(new ParameterModel(tmp));
+                                    writer.writeNext(parametersVector.getHeaders(), false);
+                                    writer.writeAll(parametersVector.toStringList(), false);
+                                    break;
+                            }
+                            try {
+                                writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setHeaderText(null);
+                            alert.setContentText("Wrong input!");
+
+                            alert.showAndWait();
+                        }
+                    }
+                });
+                deleteButton.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        if (fileTableView.getSelectionModel().getSelectedIndex() >= 0) {
+                            resultList.remove(fileTableView.getSelectionModel().getSelectedIndex());
+                            try {
+                                writer = new CSVWriter(new FileWriter(filePath), ';');
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            switch (fileTableView.getSelectionModel().getSelectedItem().getClass().getName()) {
+                                case "Models.ItemModel":
+                                    itemsVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
+                                    writer.writeNext(itemsVector.getHeaders(), false);
+                                    writer.writeAll(itemsVector.toStringList(), false);
+                                    break;
+                                case "Models.GoodModel":
+                                    goodsVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
+                                    writer.writeNext(goodsVector.getHeaders(), false);
+                                    writer.writeAll(goodsVector.toStringList(), false);
+                                    break;
+                                case "Models.OrderModel":
+                                    ordersVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
+                                    writer.writeNext(ordersVector.getHeaders(), false);
+                                    writer.writeAll(ordersVector.toStringList(), false);
+                                    break;
+                                case "Models.ParameterModel":
+                                    parametersVector.deleteItem(fileTableView.getSelectionModel().getSelectedIndex());
+                                    writer.writeNext(parametersVector.getHeaders(), false);
+                                    writer.writeAll(parametersVector.toStringList(), false);
+                                    break;
+                            }
+                            try {
+                                writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
 
 
-            hbBut.getChildren().addAll(addButton,deleteButton,saveButton);
-            hbBut.setSpacing(5);
+                hbBut.getChildren().addAll(addButton, deleteButton, saveButton);
+                hbBut.setSpacing(5);
 
-            final VBox vbox = new VBox();
-            vbox.setSpacing(5);
-            vbox.setPadding(new Insets(10,10,0,10));
-            vbox.setFillWidth(true);
-            vbox.setMinWidth(fileTableView.getFixedCellSize()*5);
-            vbox.getChildren().addAll(fileTableView,hbRow,hbBut);
+                final VBox vbox = new VBox();
+                vbox.setSpacing(5);
+                vbox.setPadding(new Insets(10, 10, 0, 10));
+                vbox.setFillWidth(true);
+                vbox.setMinWidth(fileTableView.getFixedCellSize() * 5);
+                vbox.getChildren().addAll(fileTableView, hbRow, hbBut);
 
-            ((Group)scene.getRoot()).getChildren().addAll(vbox);
-            stage.setTitle(fileName);
-            stage.setMinHeight(700);
-            stage.setMinWidth(800);
-            stage.setScene(scene);
-            stage.show();
-
+                ((Group) scene.getRoot()).getChildren().addAll(vbox);
+                stage.setTitle(fileName);
+                stage.setMinHeight(700);
+                stage.setMinWidth(800);
+                stage.setScene(scene);
+                stage.show();
+            }
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -385,6 +403,65 @@ public class EditDocController{
                 break;
         }
         return true;
+    }
+
+    public void drawStKeeper(Scene scene, Stage stage, Storekeepers storekeepersVector){
+        ComboBox stKeeperComboBox = new ComboBox();
+        for (int i = 1; i < storekeepersVector.toStringList().size(); i++) {
+            stKeeperComboBox.getItems().add("Storekeeper " + i);
+        }
+        GridPane grid = new GridPane();
+        grid.setVgap(30);
+        grid.setHgap(30);
+        grid.setPadding(new Insets(5, 5, 5, 5));
+        grid.add(stKeeperComboBox, 1, 0);
+
+        ((Group)scene.getRoot()).getChildren().add(grid);
+        stage.setTitle("Storekeepers");
+        stage.setMinHeight(600);
+        stage.setMinWidth(700);
+        stage.setScene(scene);
+        stage.show();
+
+        for(int i=0;i<2;i++) {
+            String[] names={"Quality","Value"};
+            TableColumn tableColumn = new TableColumn(names[i]);
+            tableColumn.setCellValueFactory(
+                    new PropertyValueFactory(names[i]));
+            tableColumn.setCellFactory(TextFieldTableCell.<String> forTableColumn());
+            fileTableView.getColumns().add(tableColumn);
+        }
+        ComboBox tasksComboBox = new ComboBox();
+
+        stKeeperComboBox.setOnAction((event) -> {
+            grid.getChildren().clear();
+            grid.add(stKeeperComboBox, 1, 0);
+            int selectedIndx = stKeeperComboBox.getSelectionModel().getSelectedIndex()+1;
+            StorekeeperModel st=storekeepersVector.getStorekeeper(selectedIndx);
+            ArrayList<String> values=new ArrayList<String>();
+            values.add(Integer.toString(st.getId()));
+            values.add(Integer.toString(st.getNumberOfTask()));
+            values.add(Double.toString(st.getSummLength()));
+            values.add(Integer.toString(st.getSummTime()));
+            values.add(Integer.toString(st.getTimeOnSort()));
+            values.add(Integer.toString(st.getTimeOnMove()));
+            fileTableView.setEditable(true);
+            ObservableList storekeepers = FXCollections.observableArrayList();
+            for (int i = 0; i < values.size(); i++) {
+                StorekeeperModelPresentation s=new StorekeeperModelPresentation(storekeepersVector.getHeaders()[i],values.get(i));
+                storekeepers.add(s);
+            }
+            fileTableView.setItems(storekeepers);
+            fileTableView.setMaxHeight(200);
+            for (int i = 1; i < storekeepersVector.getStorekeeper(selectedIndx).getTasks().size(); i++) {
+                tasksComboBox.getItems().add("Task " + storekeepersVector.getStorekeeper(selectedIndx).getTasks().get(i).getId());
+            }
+            grid.add(fileTableView,2,0);
+            grid.add(tasksComboBox,2,1);
+            ((Group)scene.getRoot()).getChildren().set(0,grid);
+            stage.setScene(scene);
+            stage.show();
+        });
     }
 
     public void AlertError(String error){
