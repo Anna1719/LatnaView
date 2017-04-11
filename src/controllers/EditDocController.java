@@ -10,23 +10,19 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Nikolay Kanatov on 01.03.2017.
@@ -410,6 +406,7 @@ public class EditDocController{
         for (int i = 1; i < storekeepersVector.toStringList().size(); i++) {
             stKeeperComboBox.getItems().add("Storekeeper " + i);
         }
+        stKeeperComboBox.setPromptText("Storekeepers : ");
         GridPane grid = new GridPane();
         grid.setVgap(30);
         grid.setHgap(30);
@@ -418,46 +415,50 @@ public class EditDocController{
 
         ((Group)scene.getRoot()).getChildren().add(grid);
         stage.setTitle("Storekeepers");
-        stage.setMinHeight(600);
-        stage.setMinWidth(700);
+        stage.setMinHeight(500);
+        stage.setMinWidth(500);
         stage.setScene(scene);
         stage.show();
 
-        for(int i=0;i<2;i++) {
-            String[] names={"Quality","Value"};
-            TableColumn tableColumn = new TableColumn(names[i]);
-            tableColumn.setCellValueFactory(
-                    new PropertyValueFactory(names[i]));
-            tableColumn.setCellFactory(TextFieldTableCell.<String> forTableColumn());
-            fileTableView.getColumns().add(tableColumn);
-        }
+
         ComboBox tasksComboBox = new ComboBox();
 
         stKeeperComboBox.setOnAction((event) -> {
             grid.getChildren().clear();
             grid.add(stKeeperComboBox, 1, 0);
+            String[] vectorNames=storekeepersVector.getHeaders();
+            ArrayList<Label> labels=new ArrayList<>();
+
             int selectedIndx = stKeeperComboBox.getSelectionModel().getSelectedIndex()+1;
             StorekeeperModel st=storekeepersVector.getStorekeeper(selectedIndx);
-            ArrayList<String> values=new ArrayList<String>();
+            ArrayList<String> values=new ArrayList<>();
             values.add(Integer.toString(st.getId()));
             values.add(Integer.toString(st.getNumberOfTask()));
             values.add(Double.toString(st.getSummLength()));
             values.add(Integer.toString(st.getSummTime()));
             values.add(Integer.toString(st.getTimeOnSort()));
             values.add(Integer.toString(st.getTimeOnMove()));
-            fileTableView.setEditable(true);
-            ObservableList storekeepers = FXCollections.observableArrayList();
+            String text=null;
             for (int i = 0; i < values.size(); i++) {
-                StorekeeperModelPresentation s=new StorekeeperModelPresentation(storekeepersVector.getHeaders()[i],values.get(i));
-                storekeepers.add(s);
+                Label l = new Label("");
+                text=vectorNames[i]+" : "+values.get(i)+"\n";
+                l.setText(text);
+                if((i%2)==0) {
+                    l.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+                }
+                l.setFont(Font.font(13));
+                labels.add(l);
             }
-            fileTableView.setItems(storekeepers);
-            fileTableView.setMaxHeight(200);
             for (int i = 1; i < storekeepersVector.getStorekeeper(selectedIndx).getTasks().size(); i++) {
                 tasksComboBox.getItems().add("Task " + storekeepersVector.getStorekeeper(selectedIndx).getTasks().get(i).getId());
             }
-            grid.add(fileTableView,2,0);
-            grid.add(tasksComboBox,2,1);
+
+            int i=0;
+            for (i=0; i < labels.size(); i++) {
+                grid.add(labels.get(i),2,i);
+            }
+            tasksComboBox.setPromptText("Tasks : ");
+            grid.add(tasksComboBox,2,i);
             ((Group)scene.getRoot()).getChildren().set(0,grid);
             stage.setScene(scene);
             stage.show();
