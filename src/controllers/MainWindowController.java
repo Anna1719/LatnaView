@@ -1,21 +1,23 @@
 package controllers;
 
+import Models.StorekeeperModel;
+import Readers.ReadResult;
 import Readers.Warehouse;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.ScrollPane;
+import javafx.geometry.Insets;
+import javafx.scene.Group;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Nikolay Kanatov on 01.03.2017.
@@ -28,6 +30,9 @@ public class MainWindowController {
 
     @FXML
     public ScrollPane WHouse;
+
+    @FXML
+    public ScrollPane Storekeepers;
 
     public void openMyFile()  throws Exception {
 
@@ -55,6 +60,8 @@ public class MainWindowController {
             try{
                 if(menuItem.getText().equals("Warehouse.csv"))
                     GetWareHouse(finalFilePath);
+                else if(menuItem.getText().equals("Result.csv"))
+                    StorekeepersMenu(finalFilePath);
                 else
                     ShowFile(finalFileName,finalFilePath);
             }
@@ -107,6 +114,68 @@ public class MainWindowController {
             container.getChildren().add(vb[i]);
         }
         WHouse.setContent(container);
+    }
+
+   void StorekeepersMenu(String path) throws Exception {
+        ReadResult result=new ReadResult();
+        result.readResult(path);
+        result.readLog(path.replace("Result.csv","test_log.1"));
+        Models.Storekeepers storekeepersVector=result.listStorekeeper;;
+
+        ComboBox stKeeperComboBox = new ComboBox();
+        for (int i = 1; i < storekeepersVector.toStringList().size(); i++) {
+            stKeeperComboBox.getItems().add("Storekeeper " + i);
+        }
+        stKeeperComboBox.setPromptText("Storekeepers : ");
+        GridPane grid = new GridPane();
+        grid.setVgap(30);
+        grid.setHgap(30);
+        grid.setPadding(new Insets(5, 5, 5, 5));
+        grid.add(stKeeperComboBox, 1, 0);
+
+       Storekeepers.setContent(grid);
+
+        ComboBox tasksComboBox = new ComboBox();
+
+        stKeeperComboBox.setOnAction((event) -> {
+            grid.getChildren().clear();
+            grid.add(stKeeperComboBox, 1, 0);
+            String[] vectorNames=storekeepersVector.getHeaders();
+            ArrayList<Label> labels=new ArrayList<>();
+
+            int selectedIndx = stKeeperComboBox.getSelectionModel().getSelectedIndex()+1;
+            StorekeeperModel st=storekeepersVector.getStorekeeper(selectedIndx);
+            ArrayList<String> values=new ArrayList<>();
+            values.add(Integer.toString(st.getId()));
+            values.add(Integer.toString(st.getNumberOfTask()));
+            values.add(Double.toString(st.getSummLength()));
+            values.add(Integer.toString(st.getSummTime()));
+            values.add(Integer.toString(st.getTimeOnSort()));
+            values.add(Integer.toString(st.getTimeOnMove()));
+            String text=null;
+            for (int i = 0; i < values.size(); i++) {
+                Label l = new Label("");
+                text=vectorNames[i]+" : "+values.get(i)+"\n";
+                l.setText(text);
+                if((i%2)==0) {
+                    l.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
+                }
+                l.setFont(Font.font(13));
+                labels.add(l);
+            }
+            for (int i = 1; i < storekeepersVector.getStorekeeper(selectedIndx).getTasks().size(); i++) {
+                tasksComboBox.getItems().add("Task " + storekeepersVector.getStorekeeper(selectedIndx).getTasks().get(i).getId());
+            }
+
+            int i=0;
+            for (i=0; i < labels.size(); i++) {
+                grid.add(labels.get(i),1,i+1);
+            }
+            tasksComboBox.setPromptText("Tasks : ");
+            grid.add(tasksComboBox,1,i+1);
+
+            Storekeepers.setContent(grid);
+        });
     }
 
     public EventHandler<MouseEvent> getInfoShelvesEvent(){

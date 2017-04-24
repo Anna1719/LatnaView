@@ -17,7 +17,7 @@ public class ReadResult {
     private Integer numberOfWarehousemen;
     private ArrayList<String[]> InfoAboutWarehousemen;
     private ArrayList<String[]> replenishment;
-    private Storekeepers listStorekeeper;
+    public Storekeepers listStorekeeper;
 
     String line = "";
     BufferedReader br = null;

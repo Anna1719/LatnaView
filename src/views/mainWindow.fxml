@@ -20,5 +20,6 @@
         </menus>
       </MenuBar>
       <ScrollPane fx:id="WHouse" layoutY="30.0" prefHeight="702.0" prefWidth="1050.0"/>
+       <ScrollPane fx:id="Storekeepers" layoutY="30.0" layoutX="1050.0"  prefWidth="400.0" prefHeight="702.0"/>
    </children>
 </AnchorPane>

@@ -15,14 +15,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Created by Nikolay Kanatov on 01.03.2017.
@@ -73,15 +71,7 @@ public class EditDocController{
                     resultList.addAll( parametersVector.toParametersArray());
                     countField = parametersVector.getParameter(0).getCountField();
                     break;
-                case "Result.csv":
-                    result.readResult(filePath);
-                    result.readLog(filePath.replace("Result.csv","test_log.1"));
-                    storekeepersVector=result.listStorekeeper;
-                    combo=true;
-                    drawStKeeper(scene,stage,storekeepersVector);
-                    break;
             }
-            if(!combo) {
                 FillTable(resultList, countField);
 
                 fileTableView.setPrefWidth(600);
@@ -256,7 +246,6 @@ public class EditDocController{
                 stage.setMinWidth(800);
                 stage.setScene(scene);
                 stage.show();
-            }
         }
         catch(Exception e) {
             e.printStackTrace();
@@ -401,69 +390,6 @@ public class EditDocController{
         return true;
     }
 
-    public void drawStKeeper(Scene scene, Stage stage, Storekeepers storekeepersVector){
-        ComboBox stKeeperComboBox = new ComboBox();
-        for (int i = 1; i < storekeepersVector.toStringList().size(); i++) {
-            stKeeperComboBox.getItems().add("Storekeeper " + i);
-        }
-        stKeeperComboBox.setPromptText("Storekeepers : ");
-        GridPane grid = new GridPane();
-        grid.setVgap(30);
-        grid.setHgap(30);
-        grid.setPadding(new Insets(5, 5, 5, 5));
-        grid.add(stKeeperComboBox, 1, 0);
-
-        ((Group)scene.getRoot()).getChildren().add(grid);
-        stage.setTitle("Storekeepers");
-        stage.setMinHeight(500);
-        stage.setMinWidth(500);
-        stage.setScene(scene);
-        stage.show();
-
-
-        ComboBox tasksComboBox = new ComboBox();
-
-        stKeeperComboBox.setOnAction((event) -> {
-            grid.getChildren().clear();
-            grid.add(stKeeperComboBox, 1, 0);
-            String[] vectorNames=storekeepersVector.getHeaders();
-            ArrayList<Label> labels=new ArrayList<>();
-
-            int selectedIndx = stKeeperComboBox.getSelectionModel().getSelectedIndex()+1;
-            StorekeeperModel st=storekeepersVector.getStorekeeper(selectedIndx);
-            ArrayList<String> values=new ArrayList<>();
-            values.add(Integer.toString(st.getId()));
-            values.add(Integer.toString(st.getNumberOfTask()));
-            values.add(Double.toString(st.getSummLength()));
-            values.add(Integer.toString(st.getSummTime()));
-            values.add(Integer.toString(st.getTimeOnSort()));
-            values.add(Integer.toString(st.getTimeOnMove()));
-            String text=null;
-            for (int i = 0; i < values.size(); i++) {
-                Label l = new Label("");
-                text=vectorNames[i]+" : "+values.get(i)+"\n";
-                l.setText(text);
-                if((i%2)==0) {
-                    l.setBackground(new Background(new BackgroundFill(Color.LIGHTGRAY, CornerRadii.EMPTY, Insets.EMPTY)));
-                }
-                l.setFont(Font.font(13));
-                labels.add(l);
-            }
-            for (int i = 1; i < storekeepersVector.getStorekeeper(selectedIndx).getTasks().size(); i++) {
-                tasksComboBox.getItems().add("Task " + storekeepersVector.getStorekeeper(selectedIndx).getTasks().get(i).getId());
-            }
-
-            int i=0;
-            for (i=0; i < labels.size(); i++) {
-                grid.add(labels.get(i),2,i);
-            }
-            tasksComboBox.setPromptText("Tasks : ");
-            grid.add(tasksComboBox,2,i);
-            ((Group)scene.getRoot()).getChildren().set(0,grid);
-            stage.setScene(scene);
-            stage.show();
-        });
-    }
 
     public void AlertError(String error){
         Alert alert = new Alert(Alert.AlertType.ERROR);
