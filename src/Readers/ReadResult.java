@@ -60,6 +60,8 @@ public class ReadResult {
         }
     }
 
+    public Storekeepers getListStorekeeper(){return listStorekeeper;}
+
     public void parseAndSetTasksOfStorekeeper(ArrayList<Task> taskArrayList){
         String[] elements = line.split("\\[");
         String[] idStorekeeper = elements[0].split(" ");

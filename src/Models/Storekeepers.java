@@ -7,14 +7,15 @@ import java.util.Vector;
 /**
  * Created by Ксения Горская on 20.03.2017.
  */
-public class Storekeepers {
+public class  Storekeepers {
+    static Storekeepers instance;
     private Vector<StorekeeperModel> storekeepers;
-
     public Storekeepers()
     {
         storekeepers = new Vector<>();
     }
 
+    public static Storekeepers getInstance(){return  instance;}
     public void addStorekeeper(StorekeeperModel model){
         storekeepers.add(model);
     }

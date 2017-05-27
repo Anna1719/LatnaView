@@ -2,8 +2,8 @@
 <project version="4">
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
     <file url="file://$PROJECT_DIR$/Result.csv" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/Warehouse.csv" charset="US-ASCII" />
     <file url="file://$PROJECT_DIR$/Warehouse.csv" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/test_log.1" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

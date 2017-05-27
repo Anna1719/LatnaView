@@ -41,13 +41,15 @@ public class EditDocController{
 
     public final ObservableList resultList = FXCollections.observableArrayList();
 
+    public ReadResult result=new ReadResult();
+
     private Stage stage;
+
 
     public void setResult(String fileName,String filePath){
         Scene scene = new Scene(new Group());
         try {
             Stage stage = new Stage();
-            ReadResult result=new ReadResult();
             boolean combo=false;
             int countField=0;
             switch (fileName){
@@ -70,6 +72,13 @@ public class EditDocController{
                     parametersVector = new Parameters(filePath);
                     resultList.addAll( parametersVector.toParametersArray());
                     countField = parametersVector.getParameter(0).getCountField();
+                    break;
+                case "Result.csv":
+                    result.readResult(filePath);
+                    result.readLog(filePath.replace("Result.csv","test_log.1"));
+                    storekeepersVector=result.getListStorekeeper();
+                    combo=true;
+                    drawStKeeper(scene,stage,storekeepersVector);
                     break;
             }
                 FillTable(resultList, countField);
