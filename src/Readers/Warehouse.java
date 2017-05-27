@@ -28,6 +28,7 @@ public class Warehouse {
     String line = "";
     BufferedReader br = null;
 
+    public ArrayList<Vector<Vector<String>>> getShelves(){return shelves;}
     public static Warehouse getInstance(){
         return instance;
     }
